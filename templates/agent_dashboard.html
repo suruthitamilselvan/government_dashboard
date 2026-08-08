@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Dashboard — Citizen Service Assistant</title>
+  <meta name="description" content="Internal agent and admin dashboard for managing citizen support tickets and live chat." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/agent.css" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════ LOGIN OVERLAY ═══════════════════════════ -->
+<div id="login-overlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">🏛️</div>
+    <h1>Agent Portal</h1>
+    <p class="login-sub">Citizen Service Assistant — Internal Dashboard</p>
+    <div id="login-error" class="login-error" hidden></div>
+    <form id="login-form" autocomplete="off">
+      <div class="field-group">
+        <label for="agent-id-input">Agent ID</label>
+        <input id="agent-id-input" type="text" placeholder="e.g. agent001" autocomplete="username" required />
+      </div>
+      <div class="field-group">
+        <label for="agent-pass-input">Password</label>
+        <input id="agent-pass-input" type="password" placeholder="Agent password" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-login" id="login-btn">Login to Dashboard</button>
+    </form>
+    <p class="login-note">Authorised personnel only. All actions are logged.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MAIN DASHBOARD ═══════════════════════════ -->
+<div id="dashboard" class="dashboard" hidden>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="sidebar-logo">🏛️</span>
+      <div>
+        <div class="sidebar-title">Agent Portal</div>
+        <div class="sidebar-agent-id" id="sidebar-agent-id">—</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-panel="tickets" id="nav-tickets">
+        <span>🎫</span> Tickets
+        <span class="nav-badge" id="nav-open-count">0</span>
+      </button>
+      <button class="nav-item" data-panel="live-chat" id="nav-chat">
+        <span>💬</span> Live Chat
+        <span class="nav-badge live" id="nav-live-count">0</span>
+      </button>
+      <button class="nav-item" data-panel="settings" id="nav-settings">
+        <span>⚙️</span> Settings
+      </button>
+    </nav>
+    <div class="sidebar-status">
+      <span class="status-dot online" id="agent-status-dot"></span>
+      <span id="agent-status-label">Online</span>
+      <button class="btn-logout" id="btn-logout">Logout</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- ── Stats Bar ── -->
+    <div class="stats-bar" id="stats-bar">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-total">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-card stat-open">
+        <div class="stat-val" id="stat-open">0</div>
+        <div class="stat-label">Open</div>
+      </div>
+      <div class="stat-card stat-progress">
+        <div class="stat-val" id="stat-progress">0</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-card stat-waiting">
+        <div class="stat-val" id="stat-waiting">0</div>
+        <div class="stat-label">Waiting</div>
+      </div>
+      <div class="stat-card stat-resolved">
+        <div class="stat-val" id="stat-resolved">0</div>
+        <div class="stat-label">Resolved</div>
+      </div>
+      <div class="stat-card stat-closed">
+        <div class="stat-val" id="stat-closed">0</div>
+        <div class="stat-label">Closed</div>
+      </div>
+    </div>
+
+    <!-- ══════════════ TICKETS PANEL ══════════════ -->
+    <section class="panel active" id="panel-tickets">
+      <div class="panel-header">
+        <h2>Support Tickets</h2>
+        <div class="panel-tools">
+          <input type="text" id="search-tickets" placeholder="Search tickets…" class="search-input" />
+          <select id="filter-status" class="filter-select">
+            <option value="">All Status</option>
+            <option value="open">Open</option>
+            <option value="assigned">Assigned</option>
+            <option value="in_progress">In Progress</option>
+            <option value="waiting_for_user">Waiting for User</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+          <select id="filter-priority" class="filter-select">
+            <option value="">All Priority</option>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="normal">Normal</option>
+            <option value="low">Low</option>
+          </select>
+          <button class="btn-refresh" id="btn-refresh-tickets" title="Refresh">↻</button>
+        </div>
+      </div>
+
+      <div class="tickets-layout">
+        <!-- Ticket List -->
+        <div class="ticket-list" id="ticket-list">
+          <div class="ticket-list-loading" id="ticket-list-loading">
+            <div class="spinner"></div> Loading tickets…
+          </div>
+        </div>
+
+        <!-- Ticket Detail -->
+        <div class="ticket-detail" id="ticket-detail">
+          <div class="ticket-detail-empty" id="ticket-detail-empty">
+            <div class="empty-icon">🎫</div>
+            <div>Select a ticket to view details</div>
+          </div>
+
+          <!-- Detail Content (hidden until a ticket is selected) -->
+          <div class="ticket-detail-content" id="ticket-detail-content" hidden>
+
+            <div class="detail-header">
+              <div>
+                <div class="detail-ticket-id" id="detail-ticket-id">—</div>
+                <div class="detail-subject" id="detail-subject">—</div>
+              </div>
+              <div class="detail-badges">
+                <span class="badge-status" id="detail-status-badge">open</span>
+                <span class="badge-priority" id="detail-priority-badge">normal</span>
+              </div>
+            </div>
+
+            <div class="detail-meta-row">
+              <span>👤 <strong id="detail-user-name">—</strong></span>
+              <span>📧 <span id="detail-user-email">—</span></span>
+              <span>🏢 <span id="detail-dept">—</span></span>
+              <span>🕐 <span id="detail-created">—</span></span>
+            </div>
+
+            <!-- Tabs -->
+            <div class="detail-tabs">
+              <button class="tab-btn active" data-tab="conversation">💬 Conversation</button>
+              <button class="tab-btn" data-tab="ai-summary">🤖 AI Summary</button>
+              <button class="tab-btn" data-tab="actions">⚙️ Actions</button>
+            </div>
+
+            <!-- Conversation Tab -->
+            <div class="tab-panel active" id="tab-conversation">
+              <div class="chat-messages" id="detail-messages"></div>
+              <div class="chat-input-row">
+                <textarea id="agent-reply-input" placeholder="Type your reply…" rows="2"></textarea>
+                <div class="chat-input-actions">
+                  <label class="internal-check">
+                    <input type="checkbox" id="is-internal-note" /> Internal note
+                  </label>
+                  <button class="btn-send-reply" id="btn-send-reply">Send Reply</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Summary Tab -->
+            <div class="tab-panel" id="tab-ai-summary">
+              <div class="ai-summary-box" id="detail-ai-summary">No AI summary available.</div>
+              <div class="ai-resolution-box" id="detail-ai-resolution"></div>
+            </div>
+
+            <!-- Actions Tab -->
+            <div class="tab-panel" id="tab-actions">
+              <div class="actions-grid">
+                <div class="action-group">
+                  <label>Change Status</label>
+                  <select id="action-status-select" class="action-select">
+                    <option value="open">Open</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="waiting_for_user">Waiting for User</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  <button class="btn-action" id="btn-update-status">Update Status</button>
+                </div>
+
+                <div class="action-group">
+                  <label>Resolve Ticket</label>
+                  <textarea id="resolution-notes" placeholder="Describe how the issue was resolved…" rows="4"></textarea>
+                  <button class="btn-action btn-action--resolve" id="btn-resolve-ticket">
+                    ✅ Mark as Resolved
+                  </button>
+                </div>
+
+                <div class="action-group">
+                  <label>Live Chat</label>
+                  <button class="btn-action btn-action--chat" id="btn-open-live-chat">
+                    💬 Open Live Chat Window
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ LIVE CHAT PANEL ══════════════ -->
+    <section class="panel" id="panel-live-chat" hidden>
+      <div class="panel-header">
+        <h2>Live Chat</h2>
+        <div class="live-indicator">
+          <span class="pulse-dot"></span> Real-time
+        </div>
+      </div>
+
+      <div class="live-chat-layout">
+        <!-- Active Sessions List -->
+        <div class="chat-sessions" id="chat-sessions">
+          <div class="chat-sessions-header">Active Sessions</div>
+          <div id="active-sessions-list">
+            <div class="no-sessions">No active chat sessions</div>
+          </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="live-chat-window" id="live-chat-window">
+          <div class="chat-window-empty">
+            <div class="empty-icon">💬</div>
+            <div>Select a session to start chatting</div>
+          </div>
+          <div class="live-chat-active" id="live-chat-active" hidden>
+            <div class="live-chat-header">
+              <div>
+                <div class="live-ticket-id" id="live-ticket-id">—</div>
+                <div class="live-user-name" id="live-user-name">—</div>
+              </div>
+              <div class="live-chat-actions">
+                <span class="typing-indicator" id="user-typing" hidden>User is typing…</span>
+                <button class="btn-end-chat" id="btn-end-chat">End Chat</button>
+              </div>
+            </div>
+            <div class="live-messages" id="live-messages"></div>
+            <div class="live-input-row">
+              <textarea id="live-agent-input" placeholder="Type your message…" rows="2"></textarea>
+              <button class="btn-live-send" id="btn-live-send">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════ SETTINGS PANEL ══════════════ -->
+    <section class="panel" id="panel-settings" hidden>
+      <div class="panel-header">
+        <h2>Settings</h2>
+      </div>
+      <div class="settings-grid">
+
+        <div class="settings-card">
+          <h3>📧 Notification Emails</h3>
+          <p class="settings-desc">Configure up to 3 email addresses that receive ticket notifications.</p>
+          <div id="email-config-status" class="settings-status"></div>
+          <div class="email-inputs">
+            <div class="field-group">
+              <label>Support Email 1</label>
+              <input type="email" id="email-1" placeholder="admin@example.com" />
+            </div>
+            <div class="field-group">
+              <label>Support Email 2</label>
+              <input type="email" id="email-2" placeholder="support@example.com" />
+            </div>
+            <div class="field-group">
+              <label>Support Email 3</label>
+              <input type="email" id="email-3" placeholder="helpdesk@example.com" />
+            </div>
+          </div>
+          <button class="btn-save" id="btn-save-emails">Save Email Configuration</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>🧪 Test Email Delivery</h3>
+          <p class="settings-desc">Send a test email to verify your SMTP configuration is working.</p>
+          <div class="smtp-info" id="smtp-info-box">
+            <div class="smtp-info-row"><span>SMTP Host</span><strong id="smtp-display-host">—</strong></div>
+            <div class="smtp-info-row"><span>SMTP User</span><strong id="smtp-display-user">—</strong></div>
+            <div class="smtp-info-row"><span>Status</span><strong id="smtp-display-status">—</strong></div>
+          </div>
+          <div id="test-email-status" class="settings-status" style="margin:10px 0"></div>
+          <div class="field-group" style="margin-top:10px">
+            <label>Send test email to</label>
+            <input type="email" id="test-email-addr" placeholder="your@email.com" />
+          </div>
+          <button class="btn-save" id="btn-test-email" style="background:#1558d6">Send Test Email</button>
+        </div>
+
+        <div class="settings-card">
+          <h3>🔐 Agent Information</h3>
+          <p class="settings-desc">Your current session details.</p>
+          <div class="settings-info-row"><span>Agent ID</span> <strong id="info-agent-id">—</strong></div>
+          <div class="settings-info-row"><span>Status</span> <strong>Online</strong></div>
+          <div class="settings-info-row"><span>Session</span> <strong>Active</strong></div>
+        </div>
+
+        <div class="settings-card">
+          <h3>ℹ️ System Info</h3>
+          <p class="settings-desc">Overview of the Citizen Service Assistant platform.</p>
+          <div class="settings-info-row"><span>Version</span><strong>v2.0 (Advanced)</strong></div>
+          <div class="settings-info-row"><span>Backend</span><strong>Flask + SQLite</strong></div>
+          <div class="settings-info-row"><span>AI Model</span><strong>all-MiniLM-L6-v2 + LLM</strong></div>
+          <div class="settings-info-row"><span>Real-time</span><strong>Socket.IO</strong></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════ NEW ESCALATION TOAST ═══════════════════════════ -->
+<div id="escalation-toast" class="escalation-toast" hidden>
+  <div class="toast-icon">🔔</div>
+  <div class="toast-body">
+    <div class="toast-title">New Escalation</div>
+    <div class="toast-msg" id="toast-msg">A user needs live agent assistance.</div>
+  </div>
+  <button class="toast-close" id="toast-close">✕</button>
+</div>
+
+<script src="/static/agent.js"></script>
+</body>
+</html>

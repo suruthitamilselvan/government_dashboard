@@ -1,0 +1,21 @@
+# Core web framework
+flask>=3.0.0
+
+# Sentence embeddings (RAG)
+sentence-transformers>=2.6.0
+
+# Numerical operations (cosine similarity)
+numpy>=1.26.0
+
+# Language detection
+langdetect>=1.0.9
+
+# Translation
+deep-translator>=1.11.4
+
+# LLM clients (install whichever you have a key for)
+openai>=1.30.0
+anthropic>=0.25.0
+
+# Utilities
+python-dotenv>=1.0.1

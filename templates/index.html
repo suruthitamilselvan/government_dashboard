@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Citizen Service Assistant — Government of India</title>
+  <meta name="description"
+    content="AI-powered Citizen Service Assistant for Government of India services — birth certificates, ration cards, pension schemes, income tax guidance, and eligibility checks." />
+  <meta name="keywords"
+    content="citizen services, government India, ration card, pension, birth certificate, income tax, AI assistant" />
+
+  <!-- Google Fonts: Noto Sans for multi-script support (English/Hindi/Telugu) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════════ -->
+<header class="site-header" role="banner">
+  <div class="header-inner">
+    <div class="emblem-wrap" aria-label="Government of India Emblem">
+      <svg class="emblem-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+        <circle cx="40" cy="40" r="36" fill="none" stroke="#f0a500" stroke-width="3"/>
+        <circle cx="40" cy="40" r="28" fill="none" stroke="#f0a500" stroke-width="1.5"/>
+        <circle cx="40" cy="40" r="5" fill="#f0a500"/>
+        <g stroke="#f0a500" stroke-width="1.2">
+          <line x1="40" y1="12" x2="40" y2="35"/>  <line x1="46.5" y1="12.9" x2="43.3" y2="35.5"/>
+          <line x1="52.5" y1="15.6" x2="46.6" y2="37.2"/>  <line x1="57.8" y1="20.2" x2="49.5" y2="40"/>
+          <line x1="61.6" y1="26.1" x2="51.3" y2="42.5"/>  <line x1="63.8" y1="33" x2="51.5" y2="43.8"/>
+          <line x1="64" y1="40" x2="51" y2="44.5"/>  <line x1="62" y1="47" x2="49.5" y2="43.5"/>
+          <line x1="58.3" y1="53" x2="47" y2="41.5"/>  <line x1="53" y1="57.8" x2="44" y2="49"/>
+          <line x1="46.5" y1="61" x2="42.5" y2="48.5"/>  <line x1="40" y1="62" x2="40" y2="49"/>
+          <line x1="33.5" y1="61" x2="37.5" y2="48.5"/>  <line x1="27" y1="57.8" x2="36" y2="49"/>
+          <line x1="21.7" y1="53" x2="33" y2="41.5"/>  <line x1="17" y1="47" x2="30.5" y2="43.5"/>
+          <line x1="15" y1="40" x2="28" y2="44.5"/>  <line x1="15.2" y1="33" x2="28.5" y2="43.8"/>
+          <line x1="17" y1="26.1" x2="28.7" y2="42.5"/>  <line x1="21.2" y1="20.2" x2="30.5" y2="40"/>
+          <line x1="26.5" y1="15.6" x2="33.4" y2="37.2"/>  <line x1="32.5" y1="12.9" x2="36.7" y2="35.5"/>
+        </g>
+        <path d="M28 58 Q40 54 52 58 Q48 68 40 70 Q32 68 28 58Z" fill="#f0a500" opacity="0.7"/>
+      </svg>
+    </div>
+    <div class="header-title-block">
+      <p class="header-subtitle">Government of India · Digital Citizen Services</p>
+      <h1 class="header-title">Citizen Service Assistant</h1>
+      <p class="header-tagline">Your AI-powered guide to government services — available 24×7</p>
+    </div>
+    <div class="header-controls">
+      <label for="lang-select" class="sr-only">Select Language</label>
+      <select id="lang-select" class="lang-select" aria-label="Select interface language">
+        <option value="en">English</option>
+        <option value="hi">हिन्दी (Hindi)</option>
+        <option value="te">తెలుగు (Telugu)</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LIVE ANALYTICS STRIP
+════════════════════════════════════════════════════════════ -->
+<div class="analytics-strip" role="region" aria-label="Live service statistics" id="analytics-strip">
+  <div class="analytics-inner">
+    <div class="stat-badge"><span class="stat-icon">🗂️</span><span class="stat-value" id="val-total">—</span><span class="stat-label" data-i18n="stat_queries">Queries Answered</span></div>
+    <div class="stat-divider" aria-hidden="true"></div>
+    <div class="stat-badge"><span class="stat-icon">✅</span><span class="stat-value" id="val-resolved">—</span><span class="stat-label" data-i18n="stat_resolution">Resolution Rate</span></div>
+    <div class="stat-divider" aria-hidden="true"></div>
+    <div class="stat-badge"><span class="stat-icon">⚡</span><span class="stat-value" id="val-time">—</span><span class="stat-label" data-i18n="stat_response">Avg Response</span></div>
+    <div class="stat-divider" aria-hidden="true"></div>
+    <div class="stat-badge"><span class="stat-icon">🌐</span><span class="stat-value" id="val-langs">—</span><span class="stat-label" data-i18n="stat_langs">Languages Served</span></div>
+    <div class="analytics-live-dot" aria-label="Live" title="Updating live"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CONTENT
+════════════════════════════════════════════════════════════ -->
+<main class="main-content" id="main">
+
+  <!-- ── Quick Portal Links Bar ── -->
+  <div class="portal-links-bar" role="navigation" aria-label="Official Government Portals">
+    <span class="portal-links-label">🔗 Official Portals:</span>
+    <a href="https://crsorgi.gov.in" target="_blank" rel="noopener noreferrer" class="portal-link">Birth Registration</a>
+    <a href="https://nfsa.gov.in" target="_blank" rel="noopener noreferrer" class="portal-link">Ration / NFSA</a>
+    <a href="https://nsap.nic.in" target="_blank" rel="noopener noreferrer" class="portal-link">NSAP Pension</a>
+    <a href="https://incometax.gov.in" target="_blank" rel="noopener noreferrer" class="portal-link">Income Tax</a>
+    <a href="https://digilocker.gov.in" target="_blank" rel="noopener noreferrer" class="portal-link">DigiLocker</a>
+    <a href="https://umang.gov.in" target="_blank" rel="noopener noreferrer" class="portal-link">UMANG App</a>
+    <a href="https://pgportal.gov.in" target="_blank" rel="noopener noreferrer" class="portal-link portal-link--grievance">📝 File Grievance</a>
+  </div>
+
+  <!-- ── Service Tiles ── -->
+  <section class="services-section" aria-label="Government Services">
+    <h2 class="section-heading">How can we help you today?</h2>
+    <div class="tiles-grid" role="list">
+
+      <!-- Birth Certificate -->
+      <div class="service-tile-wrap" role="listitem">
+        <div class="service-tile" id="tile-birth"
+             data-service="birth"
+             data-query="How do I apply for a birth certificate? What documents are needed?"
+             tabindex="0" role="button"
+             aria-label="Birth Certificate — click to ask the assistant">
+          <div class="tile-icon" aria-hidden="true">📋</div>
+          <div class="tile-label">Birth Certificate</div>
+          <div class="tile-sub">Application, documents &amp; status</div>
+        </div>
+        <div class="tile-actions">
+          <button class="tile-btn tile-btn--docs" data-service="birth" aria-label="View required documents for Birth Certificate">
+            📄 Documents
+          </button>
+          <a class="tile-btn tile-btn--apply" href="https://crsorgi.gov.in" target="_blank" rel="noopener noreferrer"
+             aria-label="Apply online for Birth Certificate at crsorgi.gov.in">
+            🌐 Apply Online
+          </a>
+        </div>
+      </div>
+
+      <!-- Ration Card -->
+      <div class="service-tile-wrap" role="listitem">
+        <div class="service-tile" id="tile-ration"
+             data-service="ration"
+             data-query="What is the process to apply for a ration card? What are the eligibility criteria?"
+             tabindex="0" role="button"
+             aria-label="Ration Card — click to ask the assistant">
+          <div class="tile-icon" aria-hidden="true">🌾</div>
+          <div class="tile-label">Ration Card</div>
+          <div class="tile-sub">BPL, PHH, AAY card details</div>
+        </div>
+        <div class="tile-actions">
+          <button class="tile-btn tile-btn--docs" data-service="ration" aria-label="View required documents for Ration Card">
+            📄 Documents
+          </button>
+          <a class="tile-btn tile-btn--apply" href="https://nfsa.gov.in" target="_blank" rel="noopener noreferrer"
+             aria-label="Apply online for Ration Card at nfsa.gov.in">
+            🌐 Apply Online
+          </a>
+        </div>
+      </div>
+
+      <!-- Pension -->
+      <div class="service-tile-wrap" role="listitem">
+        <div class="service-tile" id="tile-pension"
+             data-service="pension"
+             data-query="Tell me about the Old Age Pension scheme and Widow Pension scheme. What are the benefits?"
+             tabindex="0" role="button"
+             aria-label="Pension Schemes — click to ask the assistant">
+          <div class="tile-icon" aria-hidden="true">🏛️</div>
+          <div class="tile-label">Pension Schemes</div>
+          <div class="tile-sub">IGNOAPS &amp; IGNWPS details</div>
+        </div>
+        <div class="tile-actions">
+          <button class="tile-btn tile-btn--docs" data-service="pension" aria-label="View required documents for Pension">
+            📄 Documents
+          </button>
+          <a class="tile-btn tile-btn--apply" href="https://nsap.nic.in" target="_blank" rel="noopener noreferrer"
+             aria-label="Apply online for Pension at nsap.nic.in">
+            🌐 Apply Online
+          </a>
+        </div>
+      </div>
+
+      <!-- Income Tax -->
+      <div class="service-tile-wrap" role="listitem">
+        <div class="service-tile" id="tile-tax"
+             data-service="tax"
+             data-query="How do I file an income tax return? What are the tax slabs and available deductions?"
+             tabindex="0" role="button"
+             aria-label="Income Tax — click to ask the assistant">
+          <div class="tile-icon" aria-hidden="true">💰</div>
+          <div class="tile-label">Income Tax</div>
+          <div class="tile-sub">ITR filing, slabs &amp; rebates</div>
+        </div>
+        <div class="tile-actions">
+          <button class="tile-btn tile-btn--docs" data-service="tax" aria-label="View required documents for Income Tax">
+            📄 Documents
+          </button>
+          <a class="tile-btn tile-btn--apply" href="https://incometax.gov.in" target="_blank" rel="noopener noreferrer"
+             aria-label="File ITR online at incometax.gov.in">
+            🌐 File ITR
+          </a>
+        </div>
+      </div>
+
+      <!-- Check Eligibility -->
+      <div class="service-tile-wrap" role="listitem">
+        <div class="service-tile tile-eligibility" id="tile-eligibility"
+             tabindex="0" role="button"
+             aria-label="Check your eligibility for government schemes"
+             aria-haspopup="dialog">
+          <div class="tile-icon" aria-hidden="true">🎯</div>
+          <div class="tile-label">Check My Eligibility</div>
+          <div class="tile-sub">Find schemes you qualify for</div>
+          <div class="tile-badge">NEW</div>
+        </div>
+        <div class="tile-actions">
+          <button class="tile-btn tile-btn--docs" data-service="eligibility" aria-label="View all scheme criteria">
+            📋 All Criteria
+          </button>
+          <a class="tile-btn tile-btn--apply" href="https://umang.gov.in" target="_blank" rel="noopener noreferrer"
+             aria-label="Access all schemes via UMANG app">
+            🌐 UMANG App
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Workspace ── -->
+  <div class="workspace">
+
+    <!-- CHAT PANEL -->
+    <section class="chat-panel" aria-label="Chat with Citizen Service Assistant">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="bot-avatar" aria-hidden="true">🤖</div>
+          <div>
+            <div class="chat-bot-name" data-i18n="bot_name">Citizen Service Bot</div>
+            <div class="chat-bot-status"><span class="online-dot" aria-hidden="true"></span> <span data-i18n="bot_status">Online</span></div>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="live-agent-btn" id="btn-connect-live-agent" aria-label="Connect to live support agent" title="Connect to Live Agent">
+            <span data-i18n="live_agent_btn">👤 Live Agent</span>
+          </button>
+          <button class="clear-chat-btn" id="clear-chat-btn" aria-label="Clear conversation history" data-i18n="clear_chat">Clear Chat</button>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages" role="log" aria-live="polite" aria-label="Conversation messages"></div>
+
+      <div class="chat-input-area">
+        <button class="mic-btn" id="mic-btn" aria-label="Start voice input" title="Voice input (Web Speech API)">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M12 1a4 4 0 0 1 4 4v7a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v7a2 2 0 0 0 4 0V5a2 2 0 0 0-2-2zm-7 9h2a5 5 0 0 0 10 0h2a7 7 0 0 1-6 6.92V21h3v2H8v-2h3v-2.08A7 7 0 0 1 5 12z"/>
+          </svg>
+        </button>
+        <textarea id="chat-input" class="chat-input"
+          placeholder="Type your question or speak using the mic… (English, हिन्दी, తెలుగు)"
+          rows="1" aria-label="Your message" maxlength="2000"></textarea>
+        <button class="send-btn" id="send-btn" aria-label="Send message">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="confidence-bar-wrap" id="confidence-bar-wrap" aria-hidden="true">
+        <span class="confidence-label">Response confidence:</span>
+        <div class="confidence-bar-track"><div class="confidence-bar-fill" id="confidence-bar-fill"></div></div>
+        <span class="confidence-pct" id="confidence-pct">—</span>
+      </div>
+    </section>
+
+    <!-- ELIGIBILITY SIDEBAR -->
+    <aside class="eligibility-panel" id="eligibility-panel" aria-label="Eligibility Checker" hidden>
+      <div class="eligibility-header">
+        <h2 class="eligibility-title" data-i18n="eligibility_title">🎯 Eligibility Checker</h2>
+        <button class="close-eligibility-btn" id="close-eligibility-btn" aria-label="Close eligibility panel">✕</button>
+      </div>
+      <p class="eligibility-intro">
+        Enter your details below. We evaluate your profile against <strong>all available schemes</strong>
+        and show exactly what you qualify for — and why you may not qualify for others.
+      </p>
+      <form id="eligibility-form" class="eligibility-form" novalidate aria-label="Eligibility check form">
+
+        <!-- Name Details for Mismatch Detection -->
+        <div class="form-section-title">🪪 Identity Details <span class="form-hint-inline">(for name mismatch check)</span></div>
+        <div class="form-group">
+          <label for="elig-full-name" class="form-label">Full Name</label>
+          <input type="text" id="elig-full-name" class="form-input" placeholder="As you commonly use" maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label for="elig-aadhaar-name" class="form-label">Name as per Aadhaar</label>
+          <input type="text" id="elig-aadhaar-name" class="form-input" placeholder="Exact name on Aadhaar card" maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label for="elig-pan-name" class="form-label">Name as per PAN</label>
+          <input type="text" id="elig-pan-name" class="form-input" placeholder="Exact name on PAN card" maxlength="100" />
+          <span class="form-hint">We'll check for name format differences</span>
+        </div>
+
+        <!-- Demographics -->
+        <div class="form-section-title">📋 Personal Details</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="elig-dob" class="form-label">Date of Birth</label>
+            <input type="date" id="elig-dob" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label for="elig-age" class="form-label">Age (years) <span class="required" aria-hidden="true">*</span></label>
+            <input type="number" id="elig-age" class="form-input" min="0" max="120" placeholder="e.g. 65"
+                   aria-required="true" aria-describedby="elig-age-hint" />
+            <span id="elig-age-hint" class="form-hint">Your current age</span>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="elig-gender" class="form-label">Gender</label>
+            <select id="elig-gender" class="form-input form-select">
+              <option value="">— Not specified —</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="elig-marital" class="form-label">Marital Status</label>
+            <select id="elig-marital" class="form-input form-select">
+              <option value="">— Not specified —</option>
+              <option value="married">Married</option>
+              <option value="widowed">Widowed</option>
+              <option value="single">Single / Unmarried</option>
+              <option value="divorced">Divorced / Separated</option>
+            </select>
+            <span class="form-hint">Required for Widow Pension</span>
+          </div>
+        </div>
+
+        <!-- Location & Income -->
+        <div class="form-section-title">📍 Location &amp; Financial</div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="elig-state" class="form-label">State</label>
+            <select id="elig-state" class="form-input form-select">
+              <option value="">— Select State —</option>
+              <option>Andhra Pradesh</option><option>Assam</option><option>Bihar</option>
+              <option>Chhattisgarh</option><option>Delhi</option><option>Gujarat</option>
+              <option>Haryana</option><option>Himachal Pradesh</option>
+              <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+              <option>Madhya Pradesh</option><option>Maharashtra</option>
+              <option>Odisha</option><option>Punjab</option><option>Rajasthan</option>
+              <option>Tamil Nadu</option><option>Telangana</option>
+              <option>Uttar Pradesh</option><option>West Bengal</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="elig-district" class="form-label">District</label>
+            <input type="text" id="elig-district" class="form-input" placeholder="Your district" maxlength="50" />
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label for="elig-income" class="form-label">Annual Household Income (₹)</label>
+            <input type="number" id="elig-income" class="form-input" min="0" placeholder="e.g. 80000"
+                   aria-describedby="elig-income-hint" />
+            <span id="elig-income-hint" class="form-hint">Leave blank if unknown</span>
+          </div>
+          <div class="form-group">
+            <label for="elig-category" class="form-label">Social Category</label>
+            <select id="elig-category" class="form-input form-select">
+              <option value="">— Not specified —</option>
+              <option value="SC">SC (Scheduled Caste)</option>
+              <option value="ST">ST (Scheduled Tribe)</option>
+              <option value="OBC">OBC (Other Backward Class)</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="eligibility-submit-btn" id="eligibility-submit-btn">
+          <span id="eligibility-submit-text" data-i18n="eligibility_submit">Check All Schemes →</span>
+        </button>
+      </form>
+      <div id="eligibility-results" class="eligibility-results" aria-live="polite"></div>
+    </aside>
+
+  </div><!-- /workspace -->
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DOCUMENTS REQUIRED MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="docs-modal" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="docs-modal-title" hidden>
+  <div class="modal-box modal-box--wide">
+    <div class="modal-header modal-header--docs">
+      <div>
+        <div class="modal-service-icon" id="docs-modal-icon">📋</div>
+        <h2 class="modal-title" id="docs-modal-title">Documents Required</h2>
+        <p class="modal-subtitle" id="docs-modal-subtitle">Official checklist of documents to keep ready</p>
+      </div>
+      <button class="modal-close-btn" id="docs-modal-close" aria-label="Close documents modal">✕</button>
+    </div>
+    <div class="modal-body docs-modal-body" id="docs-modal-body">
+      <!-- Injected by JS -->
+    </div>
+    <div class="modal-footer-actions" id="docs-modal-footer">
+      <!-- Apply button injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ELIGIBILITY MODAL (mobile)
+════════════════════════════════════════════════════════════ -->
+<div id="eligibility-modal" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="modal-title" hidden>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modal-title">🎯 Eligibility Checker</h2>
+      <button class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LIVE AGENT MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="live-agent-modal" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="live-agent-modal-title" hidden>
+  <div class="modal-box modal-box--agent">
+    <div class="modal-header">
+      <h2 class="modal-title" id="live-agent-modal-title">💬 Connect to Live Agent</h2>
+      <button class="modal-close-btn" id="close-live-agent-modal" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="live-agent-modal-body">
+      <div id="live-agent-form-section">
+        <p class="modal-intro">Please provide your contact details so a support agent can assist you.</p>
+        <div class="form-group">
+          <label for="la-user-name" class="form-label">Your Name</label>
+          <input type="text" id="la-user-name" class="form-input" placeholder="Full name" maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label for="la-user-email" class="form-label">Email Address</label>
+          <input type="email" id="la-user-email" class="form-input" placeholder="your@email.com" maxlength="100" />
+        </div>
+        <div class="form-group">
+          <label for="la-issue" class="form-label">Describe your issue</label>
+          <textarea id="la-issue" class="form-input" rows="3" placeholder="What do you need help with?" maxlength="500"></textarea>
+        </div>
+        <div id="la-error" class="form-error" hidden></div>
+        <div class="modal-footer-actions">
+          <button class="btn-cancel" onclick="document.getElementById('live-agent-modal').setAttribute('hidden','');">Cancel</button>
+          <button class="btn-primary" id="btn-escalate-submit">Connect to Agent →</button>
+        </div>
+      </div>
+
+      <!-- After ticket created -->
+      <div id="live-agent-ticket-section" hidden>
+        <div class="ticket-created-card">
+          <div class="ticket-created-icon">✅</div>
+          <h3>Support Ticket Created</h3>
+          <div class="ticket-created-id" id="la-ticket-id">—</div>
+          <p id="la-agent-message">A live agent will be connected shortly.</p>
+          <div class="live-chat-area" id="la-chat-area">
+            <div class="live-chat-messages" id="la-messages"></div>
+            <div class="live-chat-input-row">
+              <textarea id="la-chat-input" class="form-input" rows="2" placeholder="Type your message…"></textarea>
+              <button class="btn-primary" id="la-send-btn">Send</button>
+            </div>
+            <div class="typing-badge" id="la-typing" hidden>Agent is typing…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     NAME MISMATCH WARNING MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="mismatch-modal" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="mismatch-modal-title" hidden>
+  <div class="modal-box">
+    <div class="modal-header modal-header--warning">
+      <h2 class="modal-title" id="mismatch-modal-title">⚠️ Potential Name Difference Detected</h2>
+      <button class="modal-close-btn" id="close-mismatch-modal" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="mismatch-modal-body">
+      <!-- Injected by JS -->
+    </div>
+    <div class="modal-footer-actions">
+      <button class="btn-cancel" id="mismatch-modal-dismiss">I understand, continue</button>
+      <a href="https://uidai.gov.in" target="_blank" rel="noopener noreferrer" class="btn-primary">Check Official Guidance</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PRE-REDIRECT CONFIRMATION POPUP
+════════════════════════════════════════════════════════════ -->
+<div id="redirect-confirm-modal" class="modal-overlay" role="dialog" aria-modal="true"
+     aria-labelledby="redirect-confirm-title" hidden>
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 class="modal-title" id="redirect-confirm-title">🌐 You're Leaving This Application</h2>
+      <button class="modal-close-btn" id="close-redirect-modal" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="redirect-intro">You're about to continue your application on the <strong id="redirect-portal-name">official government website</strong>.</p>
+      <p class="redirect-sub">Before proceeding, please ensure the following documents/details are ready:</p>
+      <div id="redirect-doc-list" class="redirect-doc-list"></div>
+      <div class="redirect-warning">
+        <strong>⚠️ Please verify that your personal information matches your official documents before continuing.</strong>
+      </div>
+      <div class="redirect-source-badge">
+        <span class="source-verified-dot"></span>
+        Redirecting to an official government portal (.gov.in)
+      </div>
+    </div>
+    <div class="modal-footer-actions">
+      <button class="btn-cancel" id="redirect-cancel-btn">Cancel</button>
+      <a id="redirect-confirm-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-primary"
+         onclick="document.getElementById('redirect-confirm-modal').setAttribute('hidden','');">
+        Continue to Official Website →
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════════ -->
+<footer class="site-footer" role="contentinfo">
+  <div class="footer-inner">
+
+    <!-- Official portals grid -->
+    <div class="footer-portals">
+      <div class="footer-portals-title">🏛️ Official Government Portals</div>
+      <div class="footer-portals-grid">
+        <a href="https://india.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>🇮🇳</span> india.gov.in
+        </a>
+        <a href="https://crsorgi.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>📋</span> Birth Registration (CRS)
+        </a>
+        <a href="https://nfsa.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>🌾</span> NFSA / Ration Card
+        </a>
+        <a href="https://nsap.nic.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>🏛️</span> NSAP (Pension Schemes)
+        </a>
+        <a href="https://incometax.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>💰</span> Income Tax e-Filing
+        </a>
+        <a href="https://uidai.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>🪪</span> UIDAI (Aadhaar)
+        </a>
+        <a href="https://digilocker.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link">
+          <span>🔐</span> DigiLocker
+        </a>
+        <a href="https://pgportal.gov.in" target="_blank" rel="noopener noreferrer" class="footer-portal-link footer-portal-link--cta">
+          <span>📝</span> File Grievance
+        </a>
+      </div>
+    </div>
+
+    <p class="footer-disclaimer" data-i18n="disclaimer">
+      ⚠️ <strong>Disclaimer:</strong> AI-generated responses are for informational purposes only.
+      Always verify critical information with official government sources before taking action.
+      This service does not constitute legal or financial advice.
+    </p>
+    <p class="footer-copy">© 2026 Government of India Digital Services · Built for Hackathon Demo
+      &nbsp;·&nbsp;
+      <a href="/agent" class="footer-agent-link" target="_blank">Agent Portal</a>
+    </p>
+  </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DOCUMENT CHECKLIST MODAL
+════════════════════════════════════════════════════════════ -->
+<div id="doc-checklist-modal" class="modal-overlay" hidden role="dialog"
+     aria-modal="true" aria-labelledby="doc-modal-title">
+  <div class="modal-box doc-modal-box" role="document">
+
+    <!-- Header -->
+    <div class="doc-modal-header">
+      <div class="doc-modal-header-left">
+        <span id="doc-modal-icon" class="doc-modal-icon">📋</span>
+        <div>
+          <h2 id="doc-modal-title" class="doc-modal-title">Documents Required</h2>
+          <p id="doc-modal-subtitle" class="doc-modal-subtitle">Official checklist</p>
+        </div>
+      </div>
+      <button id="close-doc-modal" class="modal-close-btn" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Documents List -->
+    <div class="doc-modal-body">
+      <div id="doc-panel-mandatory" class="doc-panel"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="doc-modal-footer">
+      <a id="doc-modal-apply-btn" href="#" target="_blank" rel="noopener noreferrer"
+         class="doc-apply-btn">🌐 Apply Online</a>
+      <a id="doc-modal-alt-btn" href="#" target="_blank" rel="noopener noreferrer"
+         class="doc-alt-btn">📱 UMANG App</a>
+      <button id="doc-modal-close-bottom" class="doc-close-btn">Close</button>
+    </div>
+
+  </div>
+</div>
+
+
+  <script src="/static/i18n.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
