@@ -3,7 +3,7 @@ services:
     name: citizen-service-assistant
     env: python
     buildCommand: pip install -r requirements.txt && python download_model.py
-    startCommand: gunicorn --worker-class eventlet -w 1 app:app --bind 0.0.0.0:$PORT
+    startCommand: gunicorn --worker-class gevent -w 1 app:app --bind 0.0.0.0:$PORT
     envVars:
       - key: FLASK_DEBUG
         value: "0"
