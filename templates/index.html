@@ -15,6 +15,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,300;0,400;0,600;0,700;0,800;1,400&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" type="image/png" href="/static/mygov_logo.png" />
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
@@ -24,26 +25,8 @@
 ════════════════════════════════════════════════════════════ -->
 <header class="site-header" role="banner">
   <div class="header-inner">
-    <div class="emblem-wrap" aria-label="Government of India Emblem">
-      <svg class="emblem-svg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-        <circle cx="40" cy="40" r="36" fill="none" stroke="#f0a500" stroke-width="3"/>
-        <circle cx="40" cy="40" r="28" fill="none" stroke="#f0a500" stroke-width="1.5"/>
-        <circle cx="40" cy="40" r="5" fill="#f0a500"/>
-        <g stroke="#f0a500" stroke-width="1.2">
-          <line x1="40" y1="12" x2="40" y2="35"/>  <line x1="46.5" y1="12.9" x2="43.3" y2="35.5"/>
-          <line x1="52.5" y1="15.6" x2="46.6" y2="37.2"/>  <line x1="57.8" y1="20.2" x2="49.5" y2="40"/>
-          <line x1="61.6" y1="26.1" x2="51.3" y2="42.5"/>  <line x1="63.8" y1="33" x2="51.5" y2="43.8"/>
-          <line x1="64" y1="40" x2="51" y2="44.5"/>  <line x1="62" y1="47" x2="49.5" y2="43.5"/>
-          <line x1="58.3" y1="53" x2="47" y2="41.5"/>  <line x1="53" y1="57.8" x2="44" y2="49"/>
-          <line x1="46.5" y1="61" x2="42.5" y2="48.5"/>  <line x1="40" y1="62" x2="40" y2="49"/>
-          <line x1="33.5" y1="61" x2="37.5" y2="48.5"/>  <line x1="27" y1="57.8" x2="36" y2="49"/>
-          <line x1="21.7" y1="53" x2="33" y2="41.5"/>  <line x1="17" y1="47" x2="30.5" y2="43.5"/>
-          <line x1="15" y1="40" x2="28" y2="44.5"/>  <line x1="15.2" y1="33" x2="28.5" y2="43.8"/>
-          <line x1="17" y1="26.1" x2="28.7" y2="42.5"/>  <line x1="21.2" y1="20.2" x2="30.5" y2="40"/>
-          <line x1="26.5" y1="15.6" x2="33.4" y2="37.2"/>  <line x1="32.5" y1="12.9" x2="36.7" y2="35.5"/>
-        </g>
-        <path d="M28 58 Q40 54 52 58 Q48 68 40 70 Q32 68 28 58Z" fill="#f0a500" opacity="0.7"/>
-      </svg>
+    <div class="emblem-wrap" aria-label="MyGov Logo">
+      <img src="/static/mygov_logo.png" alt="MyGov" class="emblem-svg" style="width:72px;height:72px;object-fit:contain;border-radius:50%;" />
     </div>
     <div class="header-title-block">
       <p class="header-subtitle">Government of India · Digital Citizen Services</p>
