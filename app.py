@@ -51,6 +51,7 @@ from typing import Optional, Tuple
 
 import numpy as np
 from flask import Flask, request, jsonify, render_template, session
+from flask_cors import CORS
 from sentence_transformers import SentenceTransformer
 
 # Load .env file if present
@@ -118,6 +119,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET", uuid.uuid4().hex)
 app.config["JSON_SORT_KEYS"] = False
+CORS(app, resources={r"/api/*": {"origins": "*"}})  # Allow Vercel frontend
 
 # ── Socket.IO ─────────────────────────────────────────────────────────────────
 if SOCKETIO_AVAILABLE:
