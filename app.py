@@ -2144,13 +2144,15 @@ if SOCKETIO_AVAILABLE and socketio:
         emit("agent_registered", {"agent_id": data.get("agent_id", "")})
 
 
+
 # ══════════════════════════════════════════════════════════════════════════════
-# STARTUP
+# STARTUP  — runs for both `python app.py` and `gunicorn app:app`
 # ══════════════════════════════════════════════════════════════════════════════
 
+init_db()
+load_and_embed_documents()
+
 if __name__ == "__main__":
-    init_db()
-    load_and_embed_documents()
     port  = int(os.environ.get("PORT", 5000))
     debug = os.environ.get("FLASK_DEBUG", "0") == "1"
     logger.info("Starting Citizen Service Assistant on port %d", port)

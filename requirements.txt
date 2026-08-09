@@ -1,5 +1,10 @@
 # Core web framework
 flask>=3.0.0
+flask-socketio>=5.3.6
+
+# Production WSGI server
+gunicorn>=21.2.0
+eventlet>=0.36.1
 
 # Sentence embeddings (RAG)
 sentence-transformers>=2.6.0

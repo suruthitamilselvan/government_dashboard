@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: citizen-service-assistant
+    env: python
+    buildCommand: pip install -r requirements.txt && python download_model.py
+    startCommand: gunicorn --worker-class eventlet -w 1 app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: HF_HUB_DISABLE_SSL_VERIFY
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+    disk:
+      name: data
+      mountPath: /opt/render/project/src
+      sizeGB: 1
